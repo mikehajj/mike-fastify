@@ -1,0 +1,85 @@
+{
+  "name": "mike-fastify-framework",
+  "version": "0.0.3",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": {
+    "name": "Mike Hajj",
+    "email": "mike.hajj@gmail.com",
+    "url": "https://www.mikehajj.com"
+  },
+  "main": "server.js",
+  "keywords": [
+    "Fastify API Framework Generator"
+  ],
+  "engines": {
+    "node": ">= 17.9.1",
+    "npm": ">= 8.11.0"
+  },
+  "scripts": {
+    "create-project": "./bin/create_project.sh",
+    "clean-project": "./bin/clean_project.sh",
+    "create-module": "./bin/create_module.sh",
+    "create-model": "./bin/create_model.sh",
+    "create-driver": "./bin/create_driver.sh",
+    "create-api": "./bin/create_api.sh",
+    "unit": "node --expose-internals ./node_modules/.bin/mocha ./tests/unit/*.js --timeout=60000 --exit",
+    "integration": "node --expose-internals ./node_modules/.bin/mocha ./tests/integration/*.js --timeout=60000 --exit",
+    "mocha": "npm run unit && npm run integration",
+    "unit-coverage": "./node_modules/.bin/nyc npm run unit && rm -Rf .nyc_output && node ./coverage_check.js",
+    "coverage": "./node_modules/.bin/nyc npm run mocha && rm -Rf .nyc_output && node ./coverage_check.js",
+    "clean": "rm -Rf node_modules && rm -Rf ./tests/coverage && rm -Rf .nyc_output",
+    "test": "npm run clean && npm install && sleep 5 && npm run coverage"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.523.0",
+    "@aws-sdk/lib-storage": "^3.569.0",
+    "@aws-sdk/s3-request-presigner": "^3.523.0",
+    "@elastic/elasticsearch": "^8.9.0",
+    "@fastify/cookie": "^9.0.4",
+    "@fastify/cors": "^8.3.0",
+    "@fastify/express": "^2.3.0",
+    "@fastify/formbody": "^7.4.0",
+    "@fastify/multipart": "^7.7.3",
+    "@fastify/static": "^6.12.0",
+    "@fastify/swagger": "^8.9.0",
+    "@fastify/swagger-ui": "^1.9.3",
+    "@sendgrid/mail": "^7.7.0",
+    "async": "^3.2.4",
+    "bunyan": "^1.8.15",
+    "bunyan-format": "^0.2.1",
+    "cryptr": "^6.2.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.21.0",
+    "fastify-plugin": "^4.5.1",
+    "fastify-socket.io": "^5.1.0",
+    "fastify-swagger": "^5.2.0",
+    "jsonschema": "^1.4.1",
+    "lodash": "^4.17.21",
+    "mongodb": "^5.8.1",
+    "mysql2": "^3.6.0",
+    "nodemailer": "^6.9.5",
+    "object-hash": "^3.0.0",
+    "phpunserialize": "^1.3.0",
+    "redis": "^4.6.8",
+    "stdio": "^2.1.1",
+    "swagger-stats": "^0.95.18",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "esdoc": "^1.1.0",
+    "esdoc-brand-plugin": "^1.0.1",
+    "esdoc-ecmascript-proposal-plugin": "^1.0.0",
+    "esdoc-external-ecmascript-plugin": "^1.0.0",
+    "esdoc-external-nodejs-plugin": "^1.0.0",
+    "esdoc-node": "^1.0.5",
+    "esdoc-node-plugin": "^0.2.1",
+    "esdoc-standard-plugin": "^1.0.0",
+    "mocha": "^6.2.2",
+    "nyc": "^14.1.1",
+    "sinon": "^9.0.2"
+  }
+}

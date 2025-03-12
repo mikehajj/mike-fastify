@@ -1,0 +1,17 @@
+{
+  "check-coverage": true,
+  "all": true,
+  "exclude": [
+    "coverage_check.js",
+    "bin/*",
+    "tests/*",
+    "tests/coverage/lcov-report/*",
+    "tests/integration/dummy2.js"
+  ],
+  "report-dir": "./tests/coverage/",
+  "reporter": [
+    "json-summary",
+    "text",
+    "lcov"
+  ]
+}
