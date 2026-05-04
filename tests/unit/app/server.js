@@ -9,7 +9,7 @@ describe("Testing Application Server", () => {
 
     it("success - driver exists", (done) => {
 
-        process.env['APP_CONFIG'] = path.join(__dirname, "../../../config/index.js");
+        process.env.APP_CONFIG = path.join(__dirname, "..", "..", "fixture-app", "config", "index.js");
         const Server = helper.requireModule("server");
 
         assert.ok(Server.launch);
@@ -28,6 +28,19 @@ describe("Testing Application Server", () => {
             });
         });
 
+    });
+
+    it("launch fails when APP_CONFIG is missing", (done) => {
+        const previousConfig = process.env.APP_CONFIG;
+        delete process.env.APP_CONFIG;
+        const Server = helper.requireModule("server");
+        Server.launch((error) => {
+            assert.ok(error);
+            if (previousConfig !== undefined) {
+                process.env.APP_CONFIG = previousConfig;
+            }
+            done();
+        });
     });
 
 });

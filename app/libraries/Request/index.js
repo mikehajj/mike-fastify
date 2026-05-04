@@ -1,62 +1,62 @@
 "use strict";
-const path = require('path');
-const fastifyPlugin = require('fastify-plugin');
+const fastifyPlugin = require("fastify-plugin");
+const {kOptions} = require("fastify/lib/symbols.js");
+
 /**
- * Request Middleware that populates a client object and injects it in the request.
- * The client object contains information related to the user-agent that made the request.
- * @param {Object} fastify
- * @param {Object} options
- * @param {Function} done
+ * Request plugin: populates request.raw.context (ip, hostname, user-agent, referer, data).
+ * When {@link https://fastify.dev/docs/latest/Reference/Server/#trustproxy Fastify trustProxy} is enabled
+ * (set `trustProxy: true` on the Fastify server options), `X-Forwarded-For` / `X-Real-IP` are consulted.
+ * Fastify 4+ does not expose `trustProxy` on `initialConfig`; this plugin also reads the server options object.
+ * When trust proxy is off, `request.ip` is used as-is (IPv4-mapped prefixes are still stripped when the value is a string).
+ * @param {import("fastify").FastifyInstance} fastify
  * @returns {Promise<void>}
- * @constructor
  */
-const Request = async (fastify, options, done) => {
-
-    /**
-     * Attach a hook that triggers as the first step to execute on each new request.
-     */
-    fastify.addHook('onRequest', async (request, reply) => {
-
-        //attempt to detect the real IP address
-        let x_forwarded_for = (request.headers['x-forwarded-for']) ? request.headers['x-forwarded-for'].split(',')[0] : null;
-        let ipAddress = request.headers['x-real-ip'] || x_forwarded_for || request.ip;
-        ipAddress ? ipAddress.replace(/^::ffff:/i, '') : null;
-        //build the context object
+const Request = async (fastify) => {
+    fastify.addHook("onRequest", async (request, reply) => {
+        const trustProxy = Boolean(
+            (fastify.initialConfig && fastify.initialConfig.trustProxy) ||
+                (fastify[kOptions] && fastify[kOptions].trustProxy)
+        );
+        let ipAddress = request.ip;
+        if (trustProxy) {
+            const xForwardedFor = request.headers["x-forwarded-for"];
+            const forwardedFirst = xForwardedFor ? String(xForwardedFor).split(",")[0].trim() : null;
+            const xRealIp = request.headers["x-real-ip"];
+            ipAddress = xRealIp || forwardedFirst || request.ip;
+        }
+        if (typeof ipAddress === "string") {
+            ipAddress = ipAddress.replace(/^::ffff:/i, "");
+        }
         request.raw.context = {
-            'ip': ipAddress,
-            'hostname': request.hostname,
-            'user-agent': request.headers['user-agent'],
-            'referer': request.headers['referer'],
-            'data': {}
+            ip: ipAddress,
+            hostname: request.hostname,
+            "user-agent": request.headers["user-agent"],
+            referer: request.headers["referer"],
+            data: {}
         };
-
-        //check if route exists, if it is public, and if it is private, authenticate, and authorize
-        let routeInfo = request.routeOptions.config || null;
+        const routeInfo = request.routeOptions.config || null;
         if (routeInfo) {
+            const authDriverName = fastify.config.auth && fastify.config.auth.driver
+                ? `driver_${fastify.config.auth.driver}`
+                : null;
             if (
                 routeInfo.private &&
                 fastify.config.auth &&
                 fastify.config.auth.driver &&
-                Object.hasOwnProperty.call(fastify, `driver_${fastify.config.auth.driver}`)
+                fastify[authDriverName]
             ) {
-                try{
-                    request.raw.context.user = await fastify[`driver_${fastify.config.auth.driver}`].authorize({
-                        'routeInfo': routeInfo,
-                        'headers': request.headers
+                try {
+                    request.raw.context.user = await fastify[authDriverName].authorize({
+                        routeInfo: routeInfo,
+                        headers: request.headers
                     });
-                }
-                catch(error){
+                } catch (error) {
                     fastify.logger.error(error);
                     return reply.response(error, null, error.code || 401);
                 }
             }
-        } else {
-            return reply.code(404).send('');
         }
     });
-
-    //trigger the next operation, we're done here.
-    done();
 };
 
 module.exports = fastifyPlugin(Request);

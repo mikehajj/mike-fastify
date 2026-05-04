@@ -1,7 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=framework-root.sh
+source "$SCRIPT_DIR/framework-root.sh"
+resolve_framework_root || exit 1
 
 echo "Creating new Driver ..."
-pushd $PWD
+pushd "$PWD" >/dev/null || exit 1
 
 if [ -z "$1" ]; then
   echo "Please provide the name of the driver as an argument"
@@ -26,14 +31,18 @@ fi
 if [[ "$FORCE" == 'true' ]]; then
 
   echo "Generating Driver files $DRIVER_FOLDER ..."
-  mkdir -p $PWD/drivers/drivers/$DRIVER_FOLDER
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/drivers/drivers/Sample/* $PWD/drivers/drivers/$DRIVER_FOLDER/
+  mkdir -p "$PWD/drivers/drivers/$DRIVER_FOLDER"
+  cp -R "$FRAMEWORK_ROOT/app/templates/drivers/drivers/Sample/"* "$PWD/drivers/drivers/$DRIVER_FOLDER/"
+  if [ -f "$FRAMEWORK_ROOT/app/templates/drivers/README.md" ]; then
+    cp "$FRAMEWORK_ROOT/app/templates/drivers/README.md" "$PWD/drivers/drivers/$DRIVER_FOLDER/README.md"
+  fi
 
   echo "Generating Driver Driver ..."
-  sed "s/Sample/$DRIVER_FOLDER/g" $PWD/drivers/drivers/$DRIVER_FOLDER/index.js >$PWD/drivers/drivers/$DRIVER_FOLDER/i.js
-  mv $PWD/drivers/drivers/$DRIVER_FOLDER/i.js $PWD/drivers/drivers/$DRIVER_FOLDER/index.js
+  sed "s/Sample/$DRIVER_FOLDER/g" "$PWD/drivers/drivers/$DRIVER_FOLDER/index.js" >"$PWD/drivers/drivers/$DRIVER_FOLDER/i.js"
+  mv "$PWD/drivers/drivers/$DRIVER_FOLDER/i.js" "$PWD/drivers/drivers/$DRIVER_FOLDER/index.js"
 
-  node $PWD/bin/update-config-file.js drivers $DRIVER_FOLDER
+  export MIKE_FASTIFY_PROJECT_ROOT="$PWD"
+  node "$SCRIPT_DIR/update-config-file.js" drivers "$DRIVER_FOLDER"
 fi
 
-popd
+popd >/dev/null || true

@@ -9,6 +9,33 @@ const fastifyIO = require('fastify-socket.io');
 let config = null;
 let serverLogger = null;
 
+const isHeartbeatRequest = (request) => {
+    const requestUrl = request.raw && request.raw.url ? request.raw.url : request.url || '';
+    const requestPath = requestUrl.split('?')[0];
+    return requestPath === '/heartbeat' || requestPath === '/heartbeat/';
+};
+
+const attachRequestLoggingHooks = (server) => {
+    server.addHook('onRequest', async (request) => {
+        if (isHeartbeatRequest(request)) {
+            return;
+        }
+        const method = request.method || (request.raw && request.raw.method) || 'UNKNOWN';
+        const url = request.raw && request.raw.url ? request.raw.url : request.url || '/';
+        request.log.info(`[REQ] ${method} ${url}`);
+    });
+    server.addHook('onResponse', async (request, reply) => {
+        if (isHeartbeatRequest(request)) {
+            return;
+        }
+        const method = request.method || (request.raw && request.raw.method) || 'UNKNOWN';
+        const url = request.raw && request.raw.url ? request.raw.url : request.url || '/';
+        const statusCode = reply && reply.statusCode ? reply.statusCode : 0;
+        const elapsedMs = reply && typeof reply.elapsedTime === 'number' ? Math.round(reply.elapsedTime) : 0;
+        request.log.info(`[RES] ${method} ${url} HTTP ${statusCode} ${elapsedMs}ms`);
+    });
+};
+
 /**
  * workflow:
  * - register all required plugins
@@ -41,16 +68,24 @@ const Application = {
         /**
          * create 2 servers: main - maintenance using fastify framework
          */
+        const trustProxyValue = config.trustProxy === true || config.trustProxy === 1 ||
+            (typeof config.trustProxy === 'string' && config.trustProxy.toLowerCase() === 'true');
         let mainOptions = {};
         mainOptions.logger = logger.get();
+        mainOptions.trustProxy = trustProxyValue;
+        mainOptions.disableRequestLogging = true;
         const serverMain = require('fastify')(mainOptions);
         serverMain.logger = logger.get();
+        attachRequestLoggingHooks(serverMain);
 
         let maintenanceOptions = {};
         maintenanceOptions.logger = logger.get();
         maintenanceOptions.ignoreTrailingSlash = true;
+        maintenanceOptions.trustProxy = trustProxyValue;
+        maintenanceOptions.disableRequestLogging = true;
         const serverMaintenance = require('fastify')(maintenanceOptions);
         serverMaintenance.logger = logger.get();
+        attachRequestLoggingHooks(serverMaintenance);
 
         //register static routes if configured
         if(config.public){
@@ -277,7 +312,8 @@ const Application = {
                 //this special library offers an instance and a plugin
                 //the plugin decorates the instance and attaches it to the fastify server
                 //the instance is then used to register all pub/sub entries
-                const PubSubInstance = require("./libraries/PubSub/index")(serverMain, config.pubsub.config);
+                const pubsubConfig = (config.pubsub && config.pubsub.config) ? config.pubsub.config : {};
+                const PubSubInstance = require("./libraries/PubSub/index")(serverMain, pubsubConfig);
                 serverMain.register(PubSubInstance.Plugin);
 
                 async.auto({
@@ -306,24 +342,22 @@ const Application = {
             }],
 
             "attach Socket Support": ["register PubSub Subscribers", (info, aCb) => {
-
-                if(config?.socket?.handler?.driver){
-                    //register the socket support to the framework
-                    serverMain.register(fastifyIO, {cors: config.cors});
-                    const socketInstance = require("./libraries/Socket/index")(serverMain, config.socket.config);
-                    serverMain.register(socketInstance.Plugin);
-
-                    serverMain.ready().then(() => {
-                        serverMain.io.use((socket, next) => {
-                            return socketInstance.Instance.registerAuthHandler(socket, config.socket.auth, next);
-                        });
-                        serverMain.io.on('connection', (socket) => {
-                            socketInstance.Instance.registerSocketHandler(socket, config.socket.handler);
-                            serverLogger.trace(`Registered Socket handler : ${config.socket.handler.type}_${config.socket.handler.name} ...`);
-                        });
-                    });
+                if (!config?.socket?.handler?.driver) {
+                    return aCb(null, true);
                 }
-                return aCb(null, true);
+                serverMain.register(fastifyIO, {cors: config.cors});
+                const socketInstance = require("./libraries/Socket/index")(serverMain, config.socket.config);
+                serverMain.register(socketInstance.Plugin);
+                return serverMain.ready().then(() => {
+                    serverMain.io.use((socket, next) => {
+                        return socketInstance.Instance.registerAuthHandler(socket, config.socket.auth, next);
+                    });
+                    serverMain.io.on('connection', (socket) => {
+                        socketInstance.Instance.registerSocketHandler(socket, config.socket.handler);
+                        serverLogger.trace(`Registered Socket handler : ${config.socket.handler.type}_${config.socket.handler.name} ...`);
+                    });
+                    return aCb(null, true);
+                }).catch((socketErr) => aCb(socketErr));
             }]
 
         }, (error) => {
@@ -416,16 +450,20 @@ const Application = {
 
             "stop Main": (aCb) => {
                 serverLogger.info(`stopping main process on ${config.apis.main.ip}:${config.apis.main.port}`);
-                fastify.main.close();
-                process.nextTick(() => {
+                fastify.main.close((closeErr) => {
+                    if (closeErr) {
+                        serverLogger.error(closeErr);
+                    }
                     return aCb(null, true);
                 });
             },
 
             "stop Maintenance": (aCb) => {
-                serverLogger.info(`stopping maintenance process on ${config.apis.main.ip}:${config.apis.main.port}`);
-                fastify.maintenance.close();
-                process.nextTick(() => {
+                serverLogger.info(`stopping maintenance process on ${config.apis.maintenance.ip}:${config.apis.maintenance.port}`);
+                fastify.maintenance.close((closeErr) => {
+                    if (closeErr) {
+                        serverLogger.error(closeErr);
+                    }
                     return aCb(null, true);
                 });
             }

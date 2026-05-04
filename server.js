@@ -1,11 +1,19 @@
 "use strict";
 
+const path = require("path");
+
 /**
  * Require the application and create a new instance.
+ * Resolves from the published package name when installed in a consumer app, or from ./app/server when developing this repository.
  *
  * @type {{init, start}}
  */
-const ServerApplication = require("mike-fastify-framework/app/server");
+let ServerApplication;
+try {
+    ServerApplication = require("mike-fastify-framework/app/server");
+} catch (firstErr) {
+    ServerApplication = require(path.join(__dirname, "app", "server"));
+}
 
 const Driver = {
     server: null,

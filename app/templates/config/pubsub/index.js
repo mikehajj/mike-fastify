@@ -1,8 +1,9 @@
 "use strict";
 
 const pubsub = {
+    "config": {},
     "publishers": [],
-    "subscribers": [],
+    "subscribers": []
 };
 
 module.exports = pubsub;

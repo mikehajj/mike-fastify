@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=framework-root.sh
+source "$SCRIPT_DIR/framework-root.sh"
+resolve_framework_root || exit 1
 
 echo "Creating Project in: $PWD"
 
@@ -16,32 +21,38 @@ fi
 
 if [[ "$FORCE" == 'true' ]]; then
 
-  pushd $PWD
+  pushd "$PWD" >/dev/null || exit 1
 
   echo "Generating Sample APIs ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/apis $PWD/apis
+  cp -R "$FRAMEWORK_ROOT/app/templates/apis" "$PWD/apis"
 
   echo "Generating Sample Databases & Drivers ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/database $PWD/database
+  cp -R "$FRAMEWORK_ROOT/app/templates/database" "$PWD/database"
 
   echo "Generating Sample Custom Drivers ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/drivers $PWD/drivers
+  cp -R "$FRAMEWORK_ROOT/app/templates/drivers" "$PWD/drivers"
 
   echo "Generating Sample Custom Models ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/models $PWD/models
+  cp -R "$FRAMEWORK_ROOT/app/templates/models" "$PWD/models"
 
   echo "Generating Sample Custom Modules ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/modules $PWD/modules
+  cp -R "$FRAMEWORK_ROOT/app/templates/modules" "$PWD/modules"
 
   echo "Generating Global Configuration ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/config $PWD/config
+  cp -R "$FRAMEWORK_ROOT/app/templates/config" "$PWD/config"
 
   echo "Generating Sample Commands ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/commands $PWD/commands
+  cp -R "$FRAMEWORK_ROOT/app/templates/commands" "$PWD/commands"
 
   echo "Generating Testing Platform ..."
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/tests $PWD/tests
-  cp -R $PWD/node_modules/mike-fastify-framework/app/templates/.nycrc.json $PWD/.nycrc.json
-  popd
+  if [ -d "$FRAMEWORK_ROOT/tests" ]; then
+    cp -R "$FRAMEWORK_ROOT/tests" "$PWD/tests"
+  else
+    echo "Warning: no tests/ directory at framework root; skipping tests copy." >&2
+  fi
+  if [ -f "$FRAMEWORK_ROOT/.nycrc.json" ]; then
+    cp "$FRAMEWORK_ROOT/.nycrc.json" "$PWD/.nycrc.json"
+  fi
+  popd >/dev/null || true
 
 fi

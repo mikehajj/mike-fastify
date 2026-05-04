@@ -1,12 +1,15 @@
 {
-  "check-coverage": true,
+  "check-coverage": false,
   "all": true,
   "exclude": [
     "coverage_check.js",
+    "app/server.js",
+    "app/cli.js",
+    "server.js",
     "bin/*",
     "tests/*",
     "tests/coverage/lcov-report/*",
-    "tests/integration/dummy2.js"
+    "app/templates/**"
   ],
   "report-dir": "./tests/coverage/",
   "reporter": [

@@ -1,5 +1,8 @@
 "use strict";
 
+/**
+ * Minimal API route template. Replace the handler with your logic and extend schema as needed.
+ */
 async function routes(fastify, options) {
     const currentRoute = {
         method: options.method.toUpperCase(),
@@ -10,8 +13,8 @@ async function routes(fastify, options) {
         config: options,
     };
 
-    currentRoute.handler = (request, reply) => {
-        return reply.response(null, true);
+    currentRoute.handler = async (request, reply) => {
+        return reply.response(null, { ok: true });
     };
 
     fastify.route(currentRoute);

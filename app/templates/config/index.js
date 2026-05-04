@@ -4,6 +4,8 @@ const path = require("path");
 
 module.exports = {
     //app global
+    /** When true, Fastify trustProxy is enabled and X-Forwarded-For / X-Real-IP are used for client IP (use only behind a trusted reverse proxy). */
+    "trustProxy": process.env.APP_TRUST_PROXY === "true" || process.env.APP_TRUST_PROXY === "1",
     "timezone": process.env.APP_TIMEZONE || 'Europe/London',
     "protocol": process.env.APP_PROTOCOL || "http",
     "name": process.env.APP_NAME || "fastify_application",

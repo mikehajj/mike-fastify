@@ -9,9 +9,9 @@ describe("Testing Sample Command", () => {
 
     it("success - command exists", (done) => {
 
-        let commandWorkingDirectory = path.join(__dirname, "../../../", "commands");
-
-        exec(`node SampleCommand.js -e dev}`, {
+        const commandWorkingDirectory = path.join(__dirname, "../../../app/templates/commands");
+        const profilePath = path.join(__dirname, "../../fixture-app/config/index.js");
+        exec(`node SampleCommand.js -e dev -p ${JSON.stringify(profilePath)}`, {
             cwd: commandWorkingDirectory,
             env: process.env
         }, (error, data) => {

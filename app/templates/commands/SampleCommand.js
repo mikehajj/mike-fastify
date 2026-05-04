@@ -1,7 +1,12 @@
 "use strict";
 
 const path = require('path');
-const Application = require("mike-fastify-framework/app/cli");
+let Application;
+try {
+    Application = require("mike-fastify-framework/app/cli");
+} catch (firstErr) {
+    Application = require(path.join(__dirname, "..", "..", "cli"));
+}
 
 //configure the inputs of this command
 //the inputs follow the annotation of 'stdio' library

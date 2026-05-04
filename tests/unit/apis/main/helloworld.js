@@ -9,6 +9,7 @@ describe("Testing Hello World API", () => {
 
     it( "success - it works", ( done ) => {
         let fastify = {
+            log: { debug: function () {} },
             route: function ( obj ) {
                 fastify.test = obj.handler;
             },
@@ -42,6 +43,7 @@ describe("Testing Hello World API", () => {
         } );
 
         fastify.test( {
+            raw: { context: {} },
             query: {
                 'env': 'dev'
             }

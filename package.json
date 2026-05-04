@@ -1,11 +1,34 @@
 {
   "name": "mike-fastify-framework",
   "version": "0.0.3",
-  "private": true,
+  "description": "Fastify dual-server framework for APIs with modules, drivers, and configurable data stores",
+  "private": false,
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/mikehajj/mike-fastify.git"
   },
+  "bugs": {
+    "url": "https://github.com/mikehajj/mike-fastify/issues"
+  },
+  "homepage": "https://github.com/mikehajj/mike-fastify#readme",
+  "files": [
+    ".github/workflows/ci.yml",
+    "app/",
+    "bin/",
+    "server.js",
+    "coverage_check.js",
+    "install.sh",
+    "tests/helper.js",
+    "tests/unit/",
+    "tests/integration/",
+    "tests/fixture-app/",
+    "LICENSE",
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md"
+  ],
   "author": {
     "name": "Mike Hajj",
     "email": "mike.hajj@gmail.com",
@@ -13,7 +36,12 @@
   },
   "main": "server.js",
   "keywords": [
-    "Fastify API Framework Generator"
+    "fastify",
+    "api",
+    "framework",
+    "swagger",
+    "mongodb",
+    "redis"
   ],
   "engines": {
     "node": ">= 17.9.1",
@@ -26,13 +54,13 @@
     "create-model": "./bin/create_model.sh",
     "create-driver": "./bin/create_driver.sh",
     "create-api": "./bin/create_api.sh",
-    "unit": "node --expose-internals ./node_modules/.bin/mocha ./tests/unit/*.js --timeout=60000 --exit",
-    "integration": "node --expose-internals ./node_modules/.bin/mocha ./tests/integration/*.js --timeout=60000 --exit",
+    "unit": "./node_modules/.bin/mocha ./tests/unit/*.js --timeout=60000 --exit",
+    "integration": "./node_modules/.bin/mocha ./tests/integration/*.js --timeout=60000 --exit",
     "mocha": "npm run unit && npm run integration",
     "unit-coverage": "./node_modules/.bin/nyc npm run unit && rm -Rf .nyc_output && node ./coverage_check.js",
     "coverage": "./node_modules/.bin/nyc npm run mocha && rm -Rf .nyc_output && node ./coverage_check.js",
     "clean": "rm -Rf node_modules && rm -Rf ./tests/coverage && rm -Rf .nyc_output",
-    "test": "npm run clean && npm install && sleep 5 && npm run coverage"
+    "test": "npm run coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.523.0",
@@ -56,7 +84,6 @@
     "fastify": "^4.21.0",
     "fastify-plugin": "^4.5.1",
     "fastify-socket.io": "^5.1.0",
-    "fastify-swagger": "^5.2.0",
     "jsonschema": "^1.4.1",
     "lodash": "^4.17.21",
     "mongodb": "^5.8.1",

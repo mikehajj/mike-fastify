@@ -23,4 +23,9 @@ describe("Running Unit Tests", () => {
     //test the server application
     require("./app/server.js");
 
+    require("./app/cli-application.js");
+
+    // framework libraries (Response, Request, etc.)
+    require("./app/libraries/index.js");
+
 });
